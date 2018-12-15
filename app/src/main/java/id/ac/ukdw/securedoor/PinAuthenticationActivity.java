@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ public class PinAuthenticationActivity extends AppCompatActivity {
     public static final String AUTH_PIN = "auth_pin";
 
     private Context mContext;
+    private Toolbar toolbarAuth;
 
     private SharedPreferences sp;
     private SharedPreferences.Editor spEdit;
@@ -33,11 +35,24 @@ public class PinAuthenticationActivity extends AppCompatActivity {
         sp = mContext.getSharedPreferences("secure-door", MODE_PRIVATE);
         spEdit = sp.edit();
 
+        toolbarAuth = findViewById(R.id.toolbarAuth);
+        setSupportActionBar(toolbarAuth);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         showPinAuthenticationFragment();
     }
 
     private void setContext() {
         mContext = this;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        Intent result = new Intent();
+        setResult(PinAuthenticationActivity.BACK_PRESSED, result);
+
+        finish();
+        return super.onSupportNavigateUp();
     }
 
     /**
@@ -166,8 +181,8 @@ public class PinAuthenticationActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         Intent result = new Intent();
-
         setResult(PinAuthenticationActivity.BACK_PRESSED, result);
+
         super.onBackPressed();
     }
 

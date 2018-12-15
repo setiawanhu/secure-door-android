@@ -27,6 +27,7 @@
         </activity>
         <activity
             android:name=".PinAuthenticationActivity"
+            android:label=""
             android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Secure Door</string>
+    <string name="authenciate_door">Authenciate Door</string>
+    <string name="generate_pin">Generate Pin</string>
+    <string name="status">Status</string>
+    <string name="share">Share</string>
 </resources>

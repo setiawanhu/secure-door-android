@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -194,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
         final Spinner spinnerTime = confirmationDialog.findViewById(R.id.spinnerTime);
         CardView btnConfirmation = confirmationDialog.findViewById(R.id.btnConfirmation);
         TextView btnCancel = confirmationDialog.findViewById(R.id.btnCancel);
+        final TextInputLayout txtName = confirmationDialog.findViewById(R.id.txtName);
 
         /**
          * Event Listener
@@ -206,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String time = spinnerTime.getSelectedItem().toString();
+                String name = txtName.getEditText().getText().toString();
 
                 switch (time){
                     case "1 Jam":
@@ -220,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 confirmationDialog.dismiss();
-                publishPin(time);
+                publishPin(time, name);
             }
         });
 
@@ -251,8 +254,8 @@ public class MainActivity extends AppCompatActivity {
      * Publish a message to /light topic
      *
      */
-    public void publishPin(String time) {
-        String payload = StringUtil.getRandomNumberString() + "-" + time;
+    public void publishPin(String time, String name) {
+        String payload = StringUtil.getRandomNumberString() + "-" + time + "-" + name;
         byte[] encodedPayload = new byte[0];
 
         try {
@@ -315,6 +318,7 @@ public class MainActivity extends AppCompatActivity {
                         notification.send();
                     } else if (payload.equalsIgnoreCase("failed")) {
                         Toast.makeText(mContext, "Pin exceed the limit", Toast.LENGTH_SHORT).show();
+                        hidePin();
                     } else {
                         txtPin.setText(payload.substring(0, 6));
                     }

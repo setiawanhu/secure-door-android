@@ -4,4 +4,13 @@
     <string name="generate_pin">Generate Pin</string>
     <string name="status">Status</string>
     <string name="share">Share</string>
+    <string name="confirm">Confirmation</string>
+    <string name="cancel">Cancel</string>
+    <string name="tol">Pin time to live</string>
+
+    <string-array name="range">
+        <item>1 Jam</item>
+        <item>1 Hari</item>
+        <item>7 Hari</item>
+    </string-array>
 </resources>

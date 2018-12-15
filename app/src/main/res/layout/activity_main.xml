@@ -1,19 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingLeft="25dp"
+    android:paddingRight="25dp"
+    android:paddingTop="125dp"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Authenciate Door"/>
+        android:layout_gravity="center"
+        android:text="@string/status"/>
 
-    <Button
+    <TextView
+        android:id="@+id/txtStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Generate Pin"/>
+        android:layout_gravity="center"
+        android:text="CLOSED"
+        android:textSize="30sp"
+        android:textColor="@color/colorAccent"/>
 
-</RelativeLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:gravity="center">
+
+        <Button
+            android:layout_width="150dp"
+            android:layout_height="60dp"
+            android:text="@string/authenciate_door"
+            android:onClick="authenticate"/>
+
+        <Button
+            android:layout_width="150dp"
+            android:layout_height="60dp"
+            android:text="@string/generate_pin"
+            android:onClick="publishPin"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutPin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="35dp"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Generated Pin"/>
+
+        <TextView
+            android:id="@+id/txtPin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="123456"
+            android:textColor="@color/colorPrimary"
+            android:textSize="25sp"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/share"
+            android:onClick="share"/>
+    </LinearLayout>
+
+
+</LinearLayout>

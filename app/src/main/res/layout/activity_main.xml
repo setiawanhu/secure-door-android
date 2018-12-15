@@ -41,7 +41,7 @@
             android:layout_width="150dp"
             android:layout_height="60dp"
             android:text="@string/generate_pin"
-            android:onClick="publishPin"/>
+            android:onClick="showConfirmationPin"/>
     </LinearLayout>
 
     <LinearLayout
@@ -69,8 +69,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/share"
+            android:drawableLeft="@drawable/ic_share"
+            android:drawablePadding="10dp"
             android:onClick="share"/>
     </LinearLayout>
-
 
 </LinearLayout>

@@ -1,12 +1,18 @@
 package id.ac.ukdw.securedoor;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtStatus;
     private LinearLayout layoutPin;
     private TextView txtPin;
+
+    private Dialog confirmationDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,12 +180,79 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Show generate pin confirmation dialog view
+     *
+     * @param v
+     */
+    public void showConfirmationPin(View v) {
+        confirmationDialog = new Dialog(this);
+        confirmationDialog.setContentView(R.layout.dialog_confimation);
+
+        confirmationDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        //Attributes
+        final Spinner spinnerTime = confirmationDialog.findViewById(R.id.spinnerTime);
+        CardView btnConfirmation = confirmationDialog.findViewById(R.id.btnConfirmation);
+        TextView btnCancel = confirmationDialog.findViewById(R.id.btnCancel);
+
+        /**
+         * Event Listener
+         * --------------
+         *
+         * Confirmation button event listener
+         *
+         */
+        btnConfirmation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String time = spinnerTime.getSelectedItem().toString();
+
+                switch (time){
+                    case "1 Jam":
+                        time = "1";
+                        break;
+                    case "1 Hari":
+                        time = "2";
+                        break;
+                    case "7 Hari":
+                        time = "3";
+                        break;
+                }
+
+                confirmationDialog.dismiss();
+                publishPin(time);
+            }
+        });
+
+        /**
+         * Event Listener
+         * --------------
+         *
+         * Cancel button event listener
+         *
+         */
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmationDialog.dismiss();
+            }
+        });
+
+        //Set the spinner data
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(mContext,
+                android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.range));
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTime.setAdapter(spinnerAdapter);
+
+        confirmationDialog.show();
+    }
+
+    /**
      * Publish a message to /light topic
      *
-     * @param v View
      */
-    public void publishPin(View v) {
-        String payload = StringUtil.getRandomNumberString();
+    public void publishPin(String time) {
+        String payload = StringUtil.getRandomNumberString() + "-" + time;
         byte[] encodedPayload = new byte[0];
 
         try {
@@ -228,24 +303,38 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             //message retrieved callback
+            NotificationHelper notification;
+            String payload = new String(message.getPayload());
+
             switch (topic) {
                 case ShiftrIO.PIN_TOPIC:
-                    txtPin.setText(new String(message.getPayload()));
-                    showPin();
+                    if (payload.equalsIgnoreCase("request")) {
+                        notification = new NotificationHelper(mContext, 100);
 
+                        notification.buildNotification("Ding Dong", "Someone wants to get into you house");
+                        notification.send();
+                    } else if (payload.equalsIgnoreCase("failed")) {
+                        Toast.makeText(mContext, "Pin exceed the limit", Toast.LENGTH_SHORT).show();
+                    } else {
+                        txtPin.setText(payload.substring(0, 6));
+                    }
+
+                    showPin();
                     break;
                 case ShiftrIO.DOOR_TOPIC:
-                    String payload = new String(message.getPayload());
-
+                    //Set the status text color
                     if (payload.equals("opened")) {
                         txtStatus.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
                     } else if(payload.equals("closed")) {
                         txtStatus.setTextColor(mContext.getResources().getColor(R.color.colorAccent));
                     } else if (payload.equals("emergency")) {
-                        NotificationHelper notification = new NotificationHelper(mContext, 500);
+                        //Send the emergency notification
+                        notification = new NotificationHelper(mContext, 500);
 
                         notification.buildNotification("Emergency", "Someone breach your home");
                         notification.send();
+
+                        txtStatus.setTextColor(mContext.getResources().getColor(R.color.colorAccent));
                     }
 
                     txtStatus.setText(payload.toUpperCase());

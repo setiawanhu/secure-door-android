@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Define all elements on view
-     *
      */
     private void setElements() {
         txtStatus = findViewById(R.id.txtStatus);
@@ -74,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Set the activity mContext
-     *
      */
     private void setContext() {
         mContext = this;
@@ -82,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Hide the generated PIN view
-     *
      */
     private void hidePin() {
         layoutPin.setVisibility(View.GONE);
@@ -90,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Show the generated PIN view
-     *
      */
     private void showPin() {
         layoutPin.setVisibility(View.VISIBLE);
@@ -98,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Set the shiftr.io client username and password
-     *
      */
     private void setCredential() {
         options = new MqttConnectOptions();
@@ -108,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Generate a connection to the shiftr.io broker
-     *
      */
     private void connectClient() {
         try {
@@ -165,9 +159,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Send a authenticate request to the door topic
-     *
      */
-    public void authenticateDoor(){
+    public void authenticateDoor() {
         String payload = "unlock";
         byte[] encodedPayload = new byte[0];
 
@@ -197,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
         TextView btnCancel = confirmationDialog.findViewById(R.id.btnCancel);
         final TextInputLayout txtName = confirmationDialog.findViewById(R.id.txtName);
 
+
         /**
          * Event Listener
          * --------------
@@ -210,7 +204,12 @@ public class MainActivity extends AppCompatActivity {
                 String time = spinnerTime.getSelectedItem().toString();
                 String name = txtName.getEditText().getText().toString();
 
-                switch (time){
+                if (name.equals("")) {
+                    txtName.setError("Name mustn't empty");
+                    return;
+                }
+
+                switch (time) {
                     case "1 Jam":
                         time = "1";
                         break;
@@ -252,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Publish a message to /light topic
-     *
      */
     public void publishPin(String time, String name) {
         String payload = StringUtil.getRandomNumberString() + "-" + time + "-" + name;
@@ -329,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
                     //Set the status text color
                     if (payload.equals("opened")) {
                         txtStatus.setTextColor(mContext.getResources().getColor(R.color.colorPrimary));
-                    } else if(payload.equals("closed")) {
+                    } else if (payload.equals("closed")) {
                         txtStatus.setTextColor(mContext.getResources().getColor(R.color.colorAccent));
                     } else if (payload.equals("emergency")) {
                         //Send the emergency notification

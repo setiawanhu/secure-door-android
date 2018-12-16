@@ -46,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Dialog confirmationDialog;
 
+    private Boolean isPinFull = false;
+    private String pin;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +89,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Show the limit error pop up and hide the generated pin view
+     */
+    private void limitError() {
+        Toast.makeText(mContext, "Pin exceed the limit", Toast.LENGTH_SHORT).show();
+        hidePin();
+    }
+
+    /**
      * Show the generated PIN view
      */
     private void showPin() {
@@ -115,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
                     subscribe(ShiftrIO.DOOR_TOPIC);
                     subscribe(ShiftrIO.PIN_TOPIC);
+                    subscribe(ShiftrIO.INFO_TOPIC);
                 }
 
                 @Override
@@ -222,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 confirmationDialog.dismiss();
+
                 publishPin(time, name);
             }
         });
@@ -253,7 +266,8 @@ public class MainActivity extends AppCompatActivity {
      * Publish a message to /light topic
      */
     public void publishPin(String time, String name) {
-        String payload = StringUtil.getRandomNumberString() + "-" + time + "-" + name;
+        pin = StringUtil.getRandomNumberString();
+        String payload = pin + "-" + time + "-" + name;
         byte[] encodedPayload = new byte[0];
 
         try {
@@ -315,13 +329,14 @@ public class MainActivity extends AppCompatActivity {
                         notification.buildNotification("Ding Dong", "Someone wants to get into you house");
                         notification.send();
                     } else if (payload.equalsIgnoreCase("failed")) {
-                        Toast.makeText(mContext, "Pin exceed the limit", Toast.LENGTH_SHORT).show();
-                        hidePin();
+                        isPinFull = true;
+                        limitError();
                     } else {
-                        txtPin.setText(payload.substring(0, 6));
+                        if (isPinFull) {
+                            limitError();
+                        }
                     }
 
-                    showPin();
                     break;
                 case ShiftrIO.DOOR_TOPIC:
                     //Set the status text color
@@ -341,6 +356,19 @@ public class MainActivity extends AppCompatActivity {
 
                     txtStatus.setText(payload.toUpperCase());
                     break;
+                case ShiftrIO.INFO_TOPIC:
+                    if (payload.equals("ok")) {
+                        isPinFull = false;
+                        txtPin.setText(pin);
+
+                        showPin();
+                    } else {
+                        //Show the info notification
+                        notification = new NotificationHelper(mContext, 200);
+
+                        notification.buildNotification("Door", payload + " has opened your house door");
+                        notification.send();
+                    }
             }
 
             //or set notification here

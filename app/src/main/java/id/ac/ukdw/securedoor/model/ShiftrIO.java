@@ -13,4 +13,5 @@ public class ShiftrIO {
     public static final String DOOR_TOPIC = "/door";
     public static final String LOCK_TOPIC = "/lock";
     public static final String PIN_TOPIC = "/pin";
+    public static final String INFO_TOPIC = "/info";
 }

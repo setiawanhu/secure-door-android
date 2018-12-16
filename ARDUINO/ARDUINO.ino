@@ -18,8 +18,12 @@ int totalInterruptCounter;
 long jam=3600, hari=3600*24, minggu=3600*24*7;
 const char* ssid     = "Setiawan Hu";
 const char* password = "thepasswordisnotthepassword";
+
+const int doorLock = 33;
+const int doorSensor = 32;
 const int buttonPin = 4;
 int buttonState = 0;
+
 bool statusPenuh = false;
 hw_timer_t * timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
@@ -33,13 +37,8 @@ WiFiClient net;
 String header;
 
 // Auxiliar variables to store the current output state
-String output26State = "off";
-String output27State = "off";
 bool statusLogin = false;
 
-// Assign output variables to GPIO pins
-const int output26 = 26;
-const int output27 = 27;
 MQTTClient client;
 
 //struct untuk pin dan durasi pin
@@ -48,11 +47,38 @@ struct Pin {
   unsigned long waktu;
 };
 
+//Define the additional variables
 //size / jumlah pin saat ini
 int sizePin = 0;
+bool isOpen = false;
+bool isLocked = true;
+bool isEmergency = false;
 
 //array untuk menyimpan pin (maksimal 10)
 Pin pins[10];
+int digitalSets[50];
+
+/**
+ * The door sensor handler
+ */
+void doorSensorHandler(){
+  Serial.println(digitalRead(doorSensor) == HIGH);
+  if(digitalRead(doorSensor) == HIGH && isLocked && isEmergency == false){
+    isEmergency = true;
+    client.publish("/door", "emergency");
+  } else if(digitalRead(doorSensor) == HIGH && !isOpen){
+    isOpen = true;
+    client.publish("/door", "opened");
+  } else if(digitalRead(doorSensor) == LOW && isOpen){
+    isEmergency = false;
+    isOpen = false;
+    
+    digitalWrite(doorLock, LOW);
+    isLocked = true;
+    
+    client.publish("/door", "closed");
+  }
+}
 
 void decTime() {
   for(int i=0; i<10; i++) {
@@ -83,13 +109,14 @@ void connect() {
     Serial.print(".");
     delay(1000);
   }
+
+  //dilempar ke messageRecived
   client.subscribe("/door");
-  client.subscribe("/lock");//dilempar ke messageRecived
+  client.subscribe("/lock");
   client.subscribe("/pin");
 }
 
 void messageReceived(String &topic, String &payload) {
-  Serial.println("hai");
   Serial.println("incoming: " + topic + " - " + payload);
   if(topic == "/pin"){
       long tempWaktu=1;
@@ -142,19 +169,22 @@ void messageReceived(String &topic, String &payload) {
       
       //menaikkan ukuran array
       sizePin += 1;
-  
+  } else if(topic == "/lock"){
+    if(payload == "unlock"){
+      //TODO: add timer to set the doorLock to LOW
+      isLocked = false;
+      digitalWrite(doorLock, HIGH);
+    } 
   }
 }
 
 void setup() {
   Serial.begin(115200);
   // Initialize the output variables as outputs
-  pinMode(output26, OUTPUT);
-  pinMode(output27, OUTPUT);
-  // Set outputs to LOW
-  digitalWrite(output26, LOW);
-  digitalWrite(output27, LOW);
+  pinMode(doorLock, OUTPUT);
+  // Initialize the input variables as inputs
   pinMode(buttonPin, INPUT);
+  pinMode(doorSensor, INPUT);
 
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
@@ -196,6 +226,8 @@ void loop(){
       }
     }
   }
+
+  doorSensorHandler();
   
   WiFiClient clientWifi = server.available();   // Listen for incoming clientWifis
   buttonState = digitalRead(buttonPin);

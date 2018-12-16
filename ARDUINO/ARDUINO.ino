@@ -16,8 +16,8 @@
 volatile int interruptCounter;
 int totalInterruptCounter;
 long jam=3600, hari=3600*24, minggu=3600*24*7;
-const char* ssid     = "Bukan Setiawan";
-const char* password = "thatscool";
+const char* ssid     = "Setiawan Hu";
+const char* password = "thepasswordisnotthepassword";
 const int buttonPin = 4;
 int buttonState = 0;
 bool statusPenuh = false;
@@ -136,6 +136,8 @@ void messageReceived(String &topic, String &payload) {
         pins[tmpIndeks].waktu = tempWaktu;
         Serial.println(pins[tmpIndeks].pin);
         Serial.println(pins[tmpIndeks].waktu);
+
+        client.publish("/info", "ok");
       }
       
       //menaikkan ukuran array

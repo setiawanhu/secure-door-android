@@ -43,7 +43,7 @@ MQTTClient client;
 
 //struct untuk pin dan durasi pin
 struct Pin {
-  String pin;
+  String pin, nama;
   unsigned long waktu;
 };
 
@@ -62,7 +62,6 @@ int digitalSets[50];
  * The door sensor handler
  */
 void doorSensorHandler(){
-  Serial.println(digitalRead(doorSensor) == HIGH);
   if(digitalRead(doorSensor) == HIGH && isLocked && isEmergency == false){
     isEmergency = true;
     client.publish("/door", "emergency");
@@ -121,6 +120,7 @@ void messageReceived(String &topic, String &payload) {
   if(topic == "/pin"){
       long tempWaktu=1;
       String tempPin = "";
+      String tempNama = "";
 
       //memasukkan 6 karakter pertama dari payload ke variabel tampungan sebagai pin
       for(int i=0; i<6; i++) {
@@ -143,6 +143,10 @@ void messageReceived(String &topic, String &payload) {
         tempWaktu = tempWaktu * 3600 * 24 * 7;
       }
 
+      for(int i=9; i < payload.length(); i++) {
+        tempNama += payload[i];
+      }
+
       if (sizePin > 9) {
         client.publish("/pin","failed");
         client.unsubscribe("/pin");
@@ -153,6 +157,7 @@ void messageReceived(String &topic, String &payload) {
           if(indeksKosong[i]) {
             tmpIndeks = i;
             indeksKosong[i] = false;
+            Serial.println(i);
             break;
           } else {
             tmpIndeks = 99;
@@ -161,6 +166,7 @@ void messageReceived(String &topic, String &payload) {
         
         pins[tmpIndeks].pin = tempPin;
         pins[tmpIndeks].waktu = tempWaktu;
+        pins[tmpIndeks].nama = tempNama;
         Serial.println(pins[tmpIndeks].pin);
         Serial.println(pins[tmpIndeks].waktu);
 
@@ -236,9 +242,11 @@ void loop(){
     //client.publish("/pin","request");
   }
   if (clientWifi) {                             // If a new clientWifi connects,
+    statusLogin = false;
     Serial.println("New clientWifi.");          // print a message out in the serial port
     String currentLine = "";                // make a String to hold incoming data from the clientWifi
     while (clientWifi.connected()) {            // loop while the clientWifi's connected
+      doorSensorHandler();
       if (clientWifi.available()) {             // if there's bytes to read from the clientWifi,
         char c = clientWifi.read();             // read a byte, then
         Serial.write(c);                    // print it out the serial monitor
@@ -258,10 +266,14 @@ void loop(){
               if(!indeksKosong[i]) {
                 if (header.indexOf("GET /verifikasi?pass="+pins[i].pin) >= 0){
                   statusLogin = true;
+                  digitalWrite(doorLock, HIGH);
+                  isLocked = false;
+                  client.publish("/info",pins[i].nama);
                   break;
                 }
               }
             }
+            //if(statusLogin) break;
             
             // Display the HTML web page
             clientWifi.println("<!DOCTYPE html><html>");
@@ -277,29 +289,27 @@ void loop(){
             // Web Page Heading
             clientWifi.println("<body><h1>ESP32 Web Server</h1>");
             if(statusLogin) {
-              clientWifi.println("<p>Berhasil login sayang :* muach love you</p>");
+              clientWifi.println("<p>PIN terverifikasi. Silakan buka pintu.</p>");
               clientWifi.println("</body></html>");
-              // The HTTP response ends with another blank line
-              clientWifi.println();
-              // Break out of the while loop
-              break;
             } else {
-              clientWifi.println("<form  method='get' action=\"/verifikasi\"><input type='text' name='pass'><input type='submit'></form>");
-              
-              clientWifi.println("</body></html>");
-              
-              // The HTTP response ends with another blank line
+              clientWifi.println("<form  method='get' action=\"/verifikasi\"><input type='number' name='pass'><input type='submit'></form>");
               clientWifi.println();
-              // Break out of the while loop
-              break;
             }
-          } else { // if you got a newline, then clear currentLine
+            // The HTTP response ends with another blank line
+            clientWifi.println("</body></html>");
+            // Break out of the while loop
+            clientWifi.println();
+            break;
+          }
+          else { // if you got a newline, then clear currentLine
             currentLine = "";
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
         }
       }
+      client.loop();
+      delay(10);
     }
     // Clear the header variable
     header = "";

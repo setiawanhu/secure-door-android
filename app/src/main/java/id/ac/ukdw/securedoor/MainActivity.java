@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
                     if (payload.equals("request")) {
                         notification = new NotificationHelper(mContext, 100);
 
-                        notification.buildNotification("Ding Dong", "Someone wants to get into you house");
+                        notification.buildNotification("Ding Dong", "Someone wants to get into your house");
                         notification.send();
                     } else if (payload.equals("ok")) {
                         isPinFull = false;

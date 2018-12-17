@@ -21,7 +21,9 @@ const char* password = "thepasswordisnotthepassword";
 
 const int doorLock = 33;
 const int doorSensor = 32;
-const int buttonPin = 4;
+const int bellPin = 4;
+const int doorPin = 5;
+const int buzzPin = 18;
 int buttonState = 0;
 
 bool statusPenuh = false;
@@ -53,6 +55,7 @@ int sizePin = 0;
 bool isOpen = false;
 bool isLocked = true;
 bool isEmergency = false;
+bool isRequested = false;
 
 //array untuk menyimpan pin (maksimal 10)
 Pin pins[10];
@@ -76,6 +79,30 @@ void doorSensorHandler(){
     isLocked = true;
     
     client.publish("/door", "closed");
+  }
+}
+
+/**
+ * The bell button handler
+ */
+void doorButtonHandler(){
+  if(digitalRead(doorPin) == LOW && isLocked){
+    Serial.println("open from inside");
+    isLocked = false;
+    digitalWrite(doorLock, HIGH);
+  }
+}
+
+void doorBellHandler(){
+  buttonState = digitalRead(bellPin);
+  
+  if (buttonState == LOW && !isRequested) {
+    isRequested = true;
+    client.publish("/info","request");
+    digitalWrite(buzzPin, HIGH);
+  } else if (buttonState == HIGH && isRequested){
+    isRequested = false;
+    digitalWrite(buzzPin, LOW);
   }
 }
 
@@ -177,7 +204,6 @@ void messageReceived(String &topic, String &payload) {
       sizePin += 1;
   } else if(topic == "/lock"){
     if(payload == "unlock"){
-      //TODO: add timer to set the doorLock to LOW
       isLocked = false;
       digitalWrite(doorLock, HIGH);
     } 
@@ -188,10 +214,12 @@ void setup() {
   Serial.begin(115200);
   // Initialize the output variables as outputs
   pinMode(doorLock, OUTPUT);
+  pinMode(buzzPin, OUTPUT);
   // Initialize the input variables as inputs
-  pinMode(buttonPin, INPUT);
+  pinMode(bellPin, INPUT);
+  pinMode(doorPin, INPUT);
   pinMode(doorSensor, INPUT);
-
+  
   // Connect to Wi-Fi network with SSID and password
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -234,19 +262,21 @@ void loop(){
   }
 
   doorSensorHandler();
+  doorButtonHandler();
+  doorBellHandler();
   
   WiFiClient clientWifi = server.available();   // Listen for incoming clientWifis
-  buttonState = digitalRead(buttonPin);
+  
   client.onMessage(messageReceived);
-  if (buttonState == HIGH) {
-    //client.publish("/pin","request");
-  }
+  
   if (clientWifi) {                             // If a new clientWifi connects,
     statusLogin = false;
     Serial.println("New clientWifi.");          // print a message out in the serial port
     String currentLine = "";                // make a String to hold incoming data from the clientWifi
     while (clientWifi.connected()) {            // loop while the clientWifi's connected
       doorSensorHandler();
+      doorButtonHandler();
+      doorBellHandler();
       if (clientWifi.available()) {             // if there's bytes to read from the clientWifi,
         char c = clientWifi.read();             // read a byte, then
         Serial.write(c);                    // print it out the serial monitor

@@ -285,11 +285,16 @@ public class MainActivity extends AppCompatActivity {
      * @param v View
      */
     public void share(View v) {
+        String body = "Halo, silahkan lakukan tahapan ini untuk membuka pintu: \n" +
+                      "1. Connect WiFi lokal terlebih dahulu\n" +
+                      "2. Buka browser dan kunjungi 192.168.43.58\n" +
+                      "3. Masukkan pin " + txtPin.getText().toString();
+
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         sharingIntent.setType("text/plain");
 
         sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Security PIN");
-        sharingIntent.putExtra(Intent.EXTRA_TEXT, "Silahkan gunakan pin berikut untuk membuka pintu: " + txtPin.getText().toString());
+        sharingIntent.putExtra(Intent.EXTRA_TEXT, body);
 
         startActivity(Intent.createChooser(sharingIntent, "Share via"));
     }

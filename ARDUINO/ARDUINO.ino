@@ -24,6 +24,7 @@ const int doorSensor = 32;
 const int bellPin = 4;
 const int doorPin = 5;
 const int buzzPin = 18;
+const int doorLedPin = 25;
 int buttonState = 0;
 
 bool statusPenuh = false;
@@ -74,8 +75,9 @@ void doorSensorHandler(){
   } else if(digitalRead(doorSensor) == LOW && isOpen){
     isEmergency = false;
     isOpen = false;
-    
-    digitalWrite(doorLock, LOW);
+
+    digitalWrite(doorLedPin, LOW);
+    digitalWrite(doorLock, HIGH);
     isLocked = true;
     
     client.publish("/door", "closed");
@@ -89,10 +91,14 @@ void doorButtonHandler(){
   if(digitalRead(doorPin) == LOW && isLocked){
     Serial.println("open from inside");
     isLocked = false;
-    digitalWrite(doorLock, HIGH);
+    digitalWrite(doorLock, LOW);
+    digitalWrite(doorLedPin, HIGH);
   }
 }
 
+/**
+ * The bell button handler
+ */
 void doorBellHandler(){
   buttonState = digitalRead(bellPin);
   
@@ -205,7 +211,8 @@ void messageReceived(String &topic, String &payload) {
   } else if(topic == "/lock"){
     if(payload == "unlock"){
       isLocked = false;
-      digitalWrite(doorLock, HIGH);
+      digitalWrite(doorLock, LOW);
+      digitalWrite(doorLedPin, HIGH);
     } 
   }
 }
@@ -215,6 +222,7 @@ void setup() {
   // Initialize the output variables as outputs
   pinMode(doorLock, OUTPUT);
   pinMode(buzzPin, OUTPUT);
+  pinMode(doorLedPin, OUTPUT);
   // Initialize the input variables as inputs
   pinMode(bellPin, INPUT);
   pinMode(doorPin, INPUT);
@@ -296,7 +304,7 @@ void loop(){
               if(!indeksKosong[i]) {
                 if (header.indexOf("GET /verifikasi?pass="+pins[i].pin) >= 0){
                   statusLogin = true;
-                  digitalWrite(doorLock, HIGH);
+                  digitalWrite(doorLock, LOW);
                   isLocked = false;
                   client.publish("/info",pins[i].nama);
                   break;

@@ -323,12 +323,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (topic) {
                 case ShiftrIO.PIN_TOPIC:
-                    if (payload.equalsIgnoreCase("request")) {
-                        notification = new NotificationHelper(mContext, 100);
-
-                        notification.buildNotification("Ding Dong", "Someone wants to get into you house");
-                        notification.send();
-                    } else if (payload.equalsIgnoreCase("failed")) {
+                    if (payload.equalsIgnoreCase("failed")) {
                         isPinFull = true;
                         limitError();
                     } else {
@@ -357,7 +352,12 @@ public class MainActivity extends AppCompatActivity {
                     txtStatus.setText(payload.toUpperCase());
                     break;
                 case ShiftrIO.INFO_TOPIC:
-                    if (payload.equals("ok")) {
+                    if (payload.equals("request")) {
+                        notification = new NotificationHelper(mContext, 100);
+
+                        notification.buildNotification("Ding Dong", "Someone wants to get into you house");
+                        notification.send();
+                    } else if (payload.equals("ok")) {
                         isPinFull = false;
                         txtPin.setText(pin);
 
